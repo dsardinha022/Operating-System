@@ -1,0 +1,104 @@
+';./*
+Damien Sardinha
+Project D Improve Shell Program
+December 11th, 2018
+*/
+void commandSearch(char*);
+void extractFilename(char*, char*, int);
+
+main()
+{
+	while(1){
+		char line[80];
+
+		interrupt(0x21, 0, "Shell> \0", 0, 0);
+		interrupt(0x21, 1, line, 0, 0);
+		commandSearch(line);
+		
+	}
+}
+
+void commandSearch(char* input){
+	char* type = "type\0";
+	char* exec = "execute\0";
+	char* dele = "delete\0";
+	char* copy = "copy\0";
+	
+	char buffer[13312];
+	char fileName[7];
+	char newfileName[7];
+
+	int i=0; 
+	int j=0, commandL = 0;
+
+	if(input[0] == '\0'){
+		interrupt(0x21, 0, "Help? COMMANDS: type execute\0", 0, 0);
+	}else{
+		for(i; input[i] != ' '; i++){
+			commandL = i;
+		}
+		
+		if(commandL == 3){
+
+			extractFilename(input, fileName, commandL);
+
+			if(input[0] == type[0]){
+				interrupt(0x21, 3, fileName, buffer, 0);
+				interrupt(0x21, 0, buffer, 0, 0);
+
+				
+			}
+			else if(input[0] == copy[0]){
+				interrupt(0x21, 3, fileName, buffer, 0);
+
+				extractFilename(input, newfileName, commandL+7);
+
+				interrupt(0x21, 8, newfileName, buffer, 1);
+			}
+			else{
+				interrupt(0x21, 0, "Unable to process file!\0", 0, 0);
+
+			}
+
+		}
+		else if(commandL == 5){
+			extractFilename(input, fileName, commandL);
+
+			
+			if(input[0] == dele[0]){
+				interrupt(0x21, 7, fileName, 0, 0);
+			}
+			else{
+				interrupt(0x21, 0, "Unable to delete file!\0", 0, 0);
+			}
+			
+		}
+		else if(commandL == 6){
+			extractFilename(input, fileName, commandL);
+	
+			if(input[0] == exec[0]){
+				interrupt(0x21, 4, fileName, 0x2000, 0);
+	
+			}
+			else{
+				interrupt(0x21, 0, "Invalid command!", 0, 0);
+			}
+
+		}
+		else{
+
+			interrupt(0x21, 0, "Unknown command! \0", 0, 0);
+		}
+
+	}
+}
+void extractFilename(char* input, char* output, int segment){
+	int j=0;	
+	
+	for(j; j < 6; j++){
+		
+		output[j] = input[segment+j+2];
+		
+	}
+	output[6] = '\0';
+}

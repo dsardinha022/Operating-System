@@ -1,0 +1,156 @@
+/*
+Damien Sardinha
+Project B Final Revision
+November 1st, 2018
+*/
+void printString(char*);
+void printChar(char);
+void readString(char*);
+void readSector(char*, int);
+void handleInterrupt21(int, char*, int, int);
+int mod(int, int);
+int div(int, int);
+
+
+main()
+{
+
+	char line[80];
+	char buffer[512];
+
+
+	makeInterrupt21();
+
+	/*
+	interrupt(0x21, 0, "Enter a line: \0", 0, 0);
+	interrupt(0x21, 1, line, 0, 0);
+	interrupt(0x21, 0, line, 0, 0);
+	interrupt(0x21, 2, buffer, 30, 0);
+	interrupt(0x21, 0, buffer, 0, 0);
+	interrupt(0x21, 3, 0, 0, 0);
+	*/
+
+	interrupt(0x21, 3, "messag\0", buffer, 0);
+	interrupt(0x21, 0, buffer, 0, 0);
+
+	while(1)
+	{
+	}
+
+}
+
+void printString(char* chars)
+{
+	int i;
+
+	for(i = 0; chars[i] != 0; i++){
+	 
+		printChar(chars[i]);
+	}
+
+}
+
+void readString(char* charz)
+{
+	int enter = 0xd,backspace = 0x8, arrayValue = 0, returnValue; 
+
+	while(returnValue != enter){
+
+	returnValue = interrupt(0x16, 0, 0, 0, 0);
+	
+
+	if(returnValue == enter){
+		charz[arrayValue] = 0xa;
+		charz[arrayValue++] = 0x0;
+		}
+	else if(returnValue == backspace){
+		printChar(backspace);
+		printChar(255);
+		printChar(backspace);
+
+			if(arrayValue == 0){
+				
+				}
+			else{
+			  arrayValue--;
+				}
+		}	
+
+	else{
+		charz[arrayValue] = returnValue;
+		printChar(returnValue);
+		arrayValue++;
+		}
+
+	}
+
+
+
+
+}
+
+void printChar(char c)
+{
+	char al = c;
+	char ah = 0xe;
+	int ax = ah*256 +al;
+	interrupt(0x10,ax,0,0,0);
+
+}
+
+void readFile(char* filename, int cx){
+	char* dir[512];	
+
+	readSector(dir, 2);
+adSector(char* buffer,int sector){
+		int ah=2, al=1, ch =0, cl=0, dh=0, dl=0;
+		int ax=0,cx=0, dx=0;
+		
+	
+		ch = sector/36;
+		cl = mod(sector, 18) +1;
+		dh = mod(div(sector, 18), 2);
+
+		ax=ah*256+al;
+		cx = ch *256+cl;
+		dx = dh *256+dl;
+
+		interrupt(0x13, ax, buffer, cx, dx);
+
+}
+void handleInterrupt21(int ax, char* bx, int cx, int dx){
+
+	if(ax == 0){
+		printString(bx);
+
+	}
+	else if(ax == 1){
+		readString(bx);
+	}
+	else if(ax == 2){
+		readSector(bx, cx);
+	}
+	else if(ax == 3){
+		readFile(bx, cx);
+	}
+	else{
+		printString("handleInterrupt21 error has occurred!\n"); 
+	}
+}
+int mod(int a, int b){
+	while(a >=b){
+		a = a-b;
+		}
+
+	return a;	
+
+}
+int div(int a,int b){
+	int q = 0;
+
+	while(q *b <= a){
+		q = q+1;
+		}
+
+	return q-1;
+}
