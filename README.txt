@@ -1,4 +1,4 @@
-Damien C. Sardinha
+Davina R. Sardinha
 Operating System - README
 December 19th, 2018
 
